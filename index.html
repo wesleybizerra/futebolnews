@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>APITO FINAL — Futebol em Tempo Real</title>
+<meta name="description" content="Últimas notícias de futebol em tempo real: Brasileirão, mercado da bola e Copa do Mundo 2026, no horário de Brasília." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Ruído / vinheta de fundo cinematográfica -->
+  <div class="grain"></div>
+  <div class="stadium-glow"></div>
+
+  <!-- Faixa AO VIVO com ticker -->
+  <div class="live-bar">
+    <div class="live-bar__tag">
+      <span class="dot"></span> AO VIVO
+    </div>
+    <div class="ticker">
+      <div class="ticker__track" id="tickerTrack">
+        <span>Carregando últimas notícias…</span>
+      </div>
+    </div>
+    <div class="live-bar__clock" id="relogioBrasilia">--:--:--</div>
+  </div>
+
+  <!-- Cabeçalho -->
+  <header class="header">
+    <div class="header__brand">
+      <span class="header__brand-mark">⚽</span>
+      <h1>APITO<span>FINAL</span></h1>
+    </div>
+    <nav class="header__nav" id="filtros">
+      <button class="filtro ativo" data-cat="Todas">Todas</button>
+      <button class="filtro" data-cat="Brasileirão">Brasileirão</button>
+      <button class="filtro" data-cat="Mercado da Bola">Mercado da Bola</button>
+      <button class="filtro" data-cat="Copa do Mundo 2026">Copa 2026</button>
+      <button class="filtro" data-cat="Seleção Brasileira">Seleção</button>
+    </nav>
+    <div class="header__status">
+      <span class="pulse"></span>
+      <span>Atualiza a cada <b>30s</b> · Brasília</span>
+    </div>
+    <a class="apoie-btn" href="https://livepix.gg/wesleybizerra22" target="_blank" rel="noopener">
+      ♥ APOIE O CRIADOR DO SITE
+    </a>
+  </header>
+
+  <!-- HERO: última notícia em destaque, estilo placar de estádio -->
+  <section class="hero" id="hero">
+    <div class="hero__eyebrow">
+      <span class="dot dot--small"></span> ÚLTIMA NOTÍCIA
+    </div>
+    <div class="scoreboard" id="scoreboard">
+      <div class="scoreboard__face" id="scoreboardFace">
+        <span class="scoreboard__categoria" id="heroCategoria">—</span>
+        <h2 class="scoreboard__titulo" id="heroTitulo">Buscando a notícia mais recente sobre futebol…</h2>
+        <div class="scoreboard__meta">
+          <span id="heroFonte">—</span>
+          <span class="meta__sep">•</span>
+          <span id="heroHorario">--:--</span>
+        </div>
+      </div>
+    </div>
+    <a class="hero__cta" id="heroLink" href="#" target="_blank" rel="noopener">
+      Ler matéria completa →
+    </a>
+  </section>
+
+  <!-- Grade de notícias -->
+  <main class="feed">
+    <div class="feed__header">
+      <h3>Mais notícias</h3>
+      <span class="feed__updated" id="ultimaAtualizacao">Atualizando…</span>
+    </div>
+    <div class="feed__grid" id="feedGrid">
+      <!-- cards injetados via JS -->
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>APITO FINAL agrega manchetes de futebol publicadas em diversos veículos da internet via Google News, em tempo real, no horário de Brasília. As notícias e links pertencem aos seus respectivos veículos de origem.</p>
+    <a class="apoie-btn apoie-btn--footer" href="https://livepix.gg/wesleybizerra22" target="_blank" rel="noopener">
+      ♥ APOIE O CRIADOR DO SITE
+    </a>
+  </footer>
+
+  <!-- Relógio fixo: sempre visível, acompanha a rolagem da página -->
+  <div class="relogio-flutuante" id="relogioFlutuante" aria-live="polite">
+    <span class="relogio-flutuante__data" id="dataFlutuante">--/--/----</span>
+    <span class="relogio-flutuante__dia" id="diaSemanaFlutuante">—</span>
+    <span class="relogio-flutuante__hora" id="horaFlutuante">--:--:--</span>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

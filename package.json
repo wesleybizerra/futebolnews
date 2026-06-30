@@ -1,0 +1,9 @@
+{
+  "name": "futebol-news-tempo-real",
+  "version": "1.0.0",
+  "description": "Site de notícias de futebol em tempo real (Brasileirão, mercado da bola, Copa do Mundo 2026) para deploy no Netlify",
+  "private": true,
+  "dependencies": {
+    "fast-xml-parser": "^4.5.0"
+  }
+}
