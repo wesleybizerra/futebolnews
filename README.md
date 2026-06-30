@@ -1,4 +1,4 @@
-# APITO FINAL — Futebol em Tempo Real
+# Futebol News — Notícias de Futebol em Tempo Real
 
 Site de notícias de futebol (Brasileirão, mercado da bola, Copa do Mundo 2026 e Seleção Brasileira)
 com atualização automática a cada 30 segundos, horário de Brasília, e destaque cinematográfico
