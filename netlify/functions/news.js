@@ -1,30 +1,38 @@
 // netlify/functions/news.js
-// Busca notícias de futebol (Brasileirão, mercado da bola, Copa do Mundo 2026)
-// agregando o Google News RSS (que por sua vez cobre milhares de fontes da internet),
+// Busca notícias de futebol (Brasileirão/Série A-D, mercado da bola, Copa do Mundo 2026,
+// Seleção Brasileira) agregando o Google News RSS — que cobre milhares de fontes da internet —
 // normaliza tudo, converte horários para o fuso de Brasília e devolve em JSON.
 
 const { XMLParser } = require("fast-xml-parser");
 
+// "query" é o termo de busca (sem aspas codificadas manualmente — usamos encodeURIComponent).
+// "janela" é a janela de tempo usada no operador real do Google ("when:Xd"), não confundir
+// com a palavra em português "quando", que o Google NÃO reconhece como operador.
 const FEEDS = [
   {
     categoria: "Brasileirão",
-    url: "https://news.google.com/rss/search?q=brasileir%C3%A3o%20futebol%20quando:2d&hl=pt-BR&gl=BR&ceid=BR:pt-BR",
+    query: '(brasileirão OR "série a" OR "série b" OR "série c" OR "série d") futebol',
+    janela: "3d",
   },
   {
     categoria: "Mercado da Bola",
-    url: "https://news.google.com/rss/search?q=%22mercado%20da%20bola%22%20OR%20transfer%C3%AAncia%20futebol%20quando:2d&hl=pt-BR&gl=BR&ceid=BR:pt-BR",
+    query: '("mercado da bola" OR transferência OR negociação OR contratação OR empréstimo) futebol',
+    janela: "3d",
   },
   {
     categoria: "Copa do Mundo 2026",
-    url: "https://news.google.com/rss/search?q=%22copa%20do%20mundo%202026%22%20quando:3d&hl=pt-BR&gl=BR&ceid=BR:pt-BR",
+    query: '("copa do mundo 2026" OR "copa do mundo" OR "copa 2026" OR mundial) futebol',
+    janela: "5d",
   },
   {
     categoria: "Seleção Brasileira",
-    url: "https://news.google.com/rss/search?q=sele%C3%A7%C3%A3o%20brasileira%20futebol%20quando:2d&hl=pt-BR&gl=BR&ceid=BR:pt-BR",
+    query: '("seleção brasileira" OR "seleção masculina" OR canarinho) futebol',
+    janela: "3d",
   },
   {
     categoria: "Geral",
-    url: "https://news.google.com/rss/search?q=futebol%20brasileiro%20quando:1d&hl=pt-BR&gl=BR&ceid=BR:pt-BR",
+    query: "futebol brasileiro",
+    janela: "1d",
   },
 ];
 
@@ -32,6 +40,18 @@ const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: "@_",
 });
+
+function montarURL(query, janela) {
+  const termoCompleto = janela ? `${query} when:${janela}` : query;
+  const hl = "pt-BR";
+  const gl = "BR";
+  const ceid = "BR:pt-BR";
+  return (
+    "https://news.google.com/rss/search?q=" +
+    encodeURIComponent(termoCompleto) +
+    `&hl=${hl}&gl=${gl}&ceid=${encodeURIComponent(ceid)}`
+  );
+}
 
 function limparTitulo(tituloBruto, fonteNome) {
   if (!tituloBruto) return "";
@@ -62,9 +82,9 @@ function paraBrasilia(dataISO) {
   }
 }
 
-async function buscarFeed(feed) {
+async function buscarXML(url) {
   try {
-    const resp = await fetch(feed.url, {
+    const resp = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; FutebolNewsBot/1.0)" },
     });
     if (!resp.ok) return [];
@@ -72,26 +92,41 @@ async function buscarFeed(feed) {
     const json = parser.parse(xml);
     const itens = json?.rss?.channel?.item;
     if (!itens) return [];
-    const lista = Array.isArray(itens) ? itens : [itens];
-
-    return lista.map((item) => {
-      const fonteNome =
-        typeof item.source === "object" ? item.source["#text"] : item.source;
-      const titulo = limparTitulo(item.title, fonteNome);
-      const dataPub = item.pubDate ? new Date(item.pubDate) : new Date();
-
-      return {
-        titulo,
-        link: item.link,
-        fonte: fonteNome || "Fonte desconhecida",
-        categoria: feed.categoria,
-        publicadoEm: dataPub.toISOString(),
-        horarioBrasilia: paraBrasilia(dataPub.toISOString()),
-      };
-    });
-  } catch (e) {
+    return Array.isArray(itens) ? itens : [itens];
+  } catch {
     return [];
   }
+}
+
+function normalizarItens(itensXML, categoria) {
+  return itensXML.map((item) => {
+    const fonteNome =
+      typeof item.source === "object" ? item.source["#text"] : item.source;
+    const titulo = limparTitulo(item.title, fonteNome);
+    const dataPub = item.pubDate ? new Date(item.pubDate) : new Date();
+
+    return {
+      titulo,
+      link: item.link,
+      fonte: fonteNome || "Fonte desconhecida",
+      categoria,
+      publicadoEm: dataPub.toISOString(),
+      horarioBrasilia: paraBrasilia(dataPub.toISOString()),
+    };
+  });
+}
+
+async function buscarFeed(feed) {
+  // 1ª tentativa: busca restrita à janela de tempo (mais "tempo real")
+  let itensXML = await buscarXML(montarURL(feed.query, feed.janela));
+
+  // se não veio nada (categoria mais nichada, pouco volume no momento),
+  // tenta de novo sem restrição de tempo para a página nunca ficar vazia
+  if (itensXML.length === 0) {
+    itensXML = await buscarXML(montarURL(feed.query, null));
+  }
+
+  return normalizarItens(itensXML, feed.categoria);
 }
 
 function chaveDedupe(titulo) {
@@ -123,7 +158,7 @@ exports.handler = async function () {
     todas.sort((a, b) => new Date(b.publicadoEm) - new Date(a.publicadoEm));
 
     // limita para não devolver um payload gigante
-    todas = todas.slice(0, 60);
+    todas = todas.slice(0, 80);
 
     const agora = new Date();
 
